@@ -1,0 +1,34 @@
+{
+    "camera": {
+        "device": "/dev/video0",
+        "width": 640,
+        "height": 480,
+        "fps": 10,
+        "jpeg_quality": 80
+    },
+    "motion": {
+        "enabled": true,
+        "sensitivity": 25,
+        "min_area": 500,
+        "cooldown_seconds": 10,
+        "downscale": 2
+    },
+    "storage": {
+        "snapshot_directory": "data/snapshots",
+        "max_snapshots": 5000,
+        "max_storage_mb": 0,
+        "snapshot_jpeg_quality": 80
+    },
+    "discord": {
+        "enabled": false,
+        "webhook_url": "",
+        "cooldown_seconds": 30
+    },
+    "web": {
+        "host": "0.0.0.0",
+        "port": 8080
+    },
+    "logging": {
+        "level": "INFO"
+    }
+}

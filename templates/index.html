@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Raspberry Pi Security Camera</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Raspberry Pi Security Camera</h1>
+    <nav>
+      <a href="/">Live</a> |
+      <a href="/snapshots">Snapshots</a> |
+      <a href="/settings">Settings</a>
+    </nav>
+  </header>
+
+  <section>
+    <h2>Status</h2>
+    <ul>
+      <li>Camera: {{ 'ONLINE' if status.camera_online else 'OFFLINE' }}</li>
+      <li>Motion Detection: {{ 'ENABLED' if status.motion_enabled else 'DISABLED' }}</li>
+      <li>Stored snapshots: {{ status.snapshot_count }}</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Live Camera Feed</h2>
+    <div class="video">
+      <img src="/stream" alt="Live stream">
+    </div>
+  </section>
+
+  <section>
+    <h2>Recent Motion</h2>
+    <div class="recent">
+      {% for e in status.recent_events %}
+        <div class="event">
+          <div class="time">{{ e.timestamp }}</div>
+          {% if e.snapshot_path %}
+            <a href="/snapshot/{{ e.snapshot_path }}"><img src="/snapshot/{{ e.snapshot_path }}" class="thumb"></a>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <footer>
+    <small>Designed for Raspberry Pi Zero 2 W. Keep this interface on a trusted local network.</small>
+  </footer>
+</body>
+</html>

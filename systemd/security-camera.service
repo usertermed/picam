@@ -1,0 +1,13 @@
+[Unit]
+Description=Raspberry Pi Security Camera
+After=network.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/security-camera
+ExecStart=/home/pi/security-camera/venv/bin/python /home/pi/security-camera/app.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

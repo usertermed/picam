@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Settings</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header><h1>Settings</h1>
+    <nav>
+      <a href="/">Live</a> |
+      <a href="/snapshots">Snapshots</a> |
+      <a href="/settings">Settings</a>
+    </nav>
+  </header>
+  <main>
+    <form id="settings-form" method="post" action="/api/save_settings">
+      <h2>Camera</h2>
+      <label>Device: <input name="camera[device]" value="{{ config.camera.device }}"></label>
+      <label>Width: <input name="camera[width]" value="{{ config.camera.width }}"></label>
+      <label>Height: <input name="camera[height]" value="{{ config.camera.height }}"></label>
+      <label>FPS: <input name="camera[fps]" value="{{ config.camera.fps }}"></label>
+      <label>JPEG quality: <input name="camera[jpeg_quality]" value="{{ config.camera.jpeg_quality }}"></label>
+
+      <h2>Motion</h2>
+      <label>Enabled: <input type="checkbox" name="motion[enabled]" {% if config.motion.enabled %}checked{% endif %}></label>
+      <label>Sensitivity: <input name="motion[sensitivity]" value="{{ config.motion.sensitivity }}"></label>
+      <label>Min area: <input name="motion[min_area]" value="{{ config.motion.min_area }}"></label>
+      <label>Cooldown seconds: <input name="motion[cooldown_seconds]" value="{{ config.motion.cooldown_seconds }}"></label>
+
+      <h2>Storage</h2>
+      <label>Snapshot directory: <input name="storage[snapshot_directory]" value="{{ config.storage.snapshot_directory }}"></label>
+      <label>Max snapshots: <input name="storage[max_snapshots]" value="{{ config.storage.max_snapshots }}"></label>
+      <label>Max storage (MB, 0=disabled): <input name="storage[max_storage_mb]" value="{{ config.storage.max_storage_mb }}"></label>
+
+      <h2>Discord</h2>
+      <label>Enabled: <input type="checkbox" name="discord[enabled]" {% if config.discord.enabled %}checked{% endif %}></label>
+      <label>Webhook URL: <input name="discord[webhook_url]" value="{{ "*hidden*" if config.discord.webhook_url else "" }}"></label>
+      <label>Cooldown seconds: <input name="discord[cooldown_seconds]" value="{{ config.discord.cooldown_seconds }}"></label>
+      <button type="submit">Save</button>
+    </form>
+    <form method="post" action="/api/test_discord">
+      <button type="submit">Test Discord Webhook</button>
+    </form>
+  </main>
+</body>
+</html>

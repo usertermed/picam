@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Snapshots</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Snapshots</h1>
+    <nav>
+      <a href="/">Live</a> |
+      <a href="/snapshots">Snapshots</a> |
+      <a href="/settings">Settings</a>
+    </nav>
+  </header>
+  <main>
+    <div class="grid">
+      {% for s in snapshots %}
+        <div class="snap">
+          <a href="/snapshot/{{ s.path }}"><img src="/snapshot/{{ s.path }}" class="thumb"></a>
+          <div class="meta">{{ s.path }}<br>{{ s.mtime }}</div>
+          <form method="post" action="/api/delete_snapshot" onsubmit="return confirm('Delete this snapshot?');">
+            <input type="hidden" name="path" value="{{ s.path }}">
+            <button type="submit">Delete</button>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="pagination">
+      {% if page > 1 %}
+        <a href="?page={{ page-1 }}">Previous</a>
+      {% endif %}
+      Page {{ page }}
+      {% if total > page * per_page %}
+        <a href="?page={{ page+1 }}">Next</a>
+      {% endif %}
+    </div>
+    <form method="post" action="/api/delete_all" onsubmit="return confirm('Delete ALL snapshots?');">
+      <button type="submit">Delete all snapshots</button>
+    </form>
+  </main>
+</body>
+</html>

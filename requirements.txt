@@ -1,0 +1,6 @@
+Flask==2.3.3
+numpy==1.26.4
+Pillow==10.1.0
+requests==2.31.0
+# Optional: OpenCV can speed capture if available; on Pi Zero 2 W it may need to be built or installed via apt
+opencv-python-headless==4.8.1.78
