@@ -33,7 +33,29 @@ info "Service will run as user: $RUN_USER"
 # Update apt and install OS packages
 info "Updating apt and installing OS packages (may prompt for sudo password)"
 sudo apt update
-sudo apt install -y python3-venv python3-pip python3-dev build-essential libatlas-base-dev libjpeg-dev ffmpeg v4l-utils pkg-config libffi-dev
+
+# Some packages (especially optimized BLAS like libatlas-base-dev) may not be available on all releases.
+# Detect available packages and install what apt knows about.
+PACKAGES=(python3-venv python3-pip python3-dev build-essential libatlas-base-dev libjpeg-dev ffmpeg v4l-utils pkg-config libffi-dev)
+AVAILABLE=()
+MISSING=()
+for pkg in "${PACKAGES[@]}"; do
+  if apt-cache show "$pkg" >/dev/null 2>&1; then
+    AVAILABLE+=("$pkg")
+  else
+    MISSING+=("$pkg")
+  fi
+done
+
+if [ "${#AVAILABLE[@]}" -gt 0 ]; then
+  info "Installing packages: ${AVAILABLE[*]}"
+  sudo apt install -y "${AVAILABLE[@]}"
+fi
+
+if [ "${#MISSING[@]}" -gt 0 ]; then
+  warn "Some packages are not available in apt: ${MISSING[*]}"
+  warn "This is OK on newer distributions like Trixie. If libatlas-base-dev is missing, you can install python3-opencv via apt (sudo apt install -y python3-opencv) or omit BLAS dev packages and rely on pip wheels or system numpy."
+fi
 
 # Clone or update repo
 if [[ -d "$INSTALL_DIR/.git" ]]; then
