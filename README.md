@@ -30,6 +30,8 @@ Install via Script (Raspberry Pi OS / Raspbian)
    ./install.sh
    ```
 3. Service should automatically start, check the web portal at http://<raspberry-pi-ip>:3000
+
+
 Do-It-Yourself Install (Not Recommended) (Debian-based)
 --------------------------------------
 
