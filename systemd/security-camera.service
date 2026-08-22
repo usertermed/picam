@@ -5,9 +5,10 @@ After=network.target
 [Service]
 User=pi
 WorkingDirectory=/home/pi/security-camera
-ExecStart=/home/pi/security-camera/venv/bin/python /home/pi/security-camera/app.py
+ExecStart=/bin/bash -lc 'source /home/pi/security-camera/venv/bin/activate && exec python /home/pi/security-camera/app.py'
 Restart=on-failure
 RestartSec=5
+Environment=PATH=/home/pi/security-camera/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 [Install]
 WantedBy=multi-user.target

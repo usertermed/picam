@@ -36,7 +36,11 @@ sudo apt update
 
 # Some packages (especially optimized BLAS like libatlas-base-dev) may not be available on all releases.
 # Detect available packages and install what apt knows about.
-PACKAGES=(python3-venv python3-pip python3-dev build-essential libatlas-base-dev libjpeg-dev ffmpeg v4l-utils pkg-config libffi-dev)
+# Prefer packages that are likely to be available on Raspberry Pi OS Trixie
+# Avoid libatlas-base-dev which often has no candidate on newer releases
+# Do NOT install NumPy via pip on a Pi Zero 2 W; it can trigger OOM and restarts.
+# Use the OS package instead (python3-numpy).
+PACKAGES=(python3-venv python3-pip python3-dev build-essential libjpeg-dev ffmpeg v4l-utils pkg-config libffi-dev python3-numpy)
 AVAILABLE=()
 MISSING=()
 for pkg in "${PACKAGES[@]}"; do
@@ -54,7 +58,14 @@ fi
 
 if [ "${#MISSING[@]}" -gt 0 ]; then
   warn "Some packages are not available in apt: ${MISSING[*]}"
-  warn "This is OK on newer distributions like Trixie. If libatlas-base-dev is missing, you can install python3-opencv via apt (sudo apt install -y python3-opencv) or omit BLAS dev packages and rely on pip wheels or system numpy."
+fi
+
+# Try apt OpenCV if available. Python environment will not pip-install NumPy to avoid OOM on Pi Zero 2 W.
+if apt-cache show python3-opencv >/dev/null 2>&1; then
+  info "Installing python3-opencv from apt (preferred on Raspberry Pi OS)"
+  sudo apt install -y python3-opencv || warn "Failed to install python3-opencv via apt"
+else
+  warn "python3-opencv is not available via apt on this system. The app will still run with mock camera frames for development, but real camera capture will require an alternative installation method."
 fi
 
 # Clone or update repo
@@ -69,20 +80,40 @@ fi
 
 # Create virtualenv and install Python dependencies
 cd "$INSTALL_DIR"
-if [[ ! -d venv ]]; then
-  info "Creating Python virtualenv"
-  python3 -m venv venv
+if [[ -d venv ]]; then
+  info "Rebuilding venv to ensure apt-installed packages are visible to the service"
+  rm -rf venv
 fi
+info "Creating Python virtualenv with access to system packages (NumPy/OpenCV/PIL from apt)"
+python3 -m venv --system-site-packages venv
+
+# Ensure apt-provided Python packages are available inside the venv for NumPy/OpenCV/PIL.
+info "Installing / confirming apt Python packages used by the app"
+sudo apt install -y python3-venv python3-pip python3-dev build-essential libjpeg-dev ffmpeg v4l-utils pkg-config libffi-dev python3-numpy python3-opencv python3-pil
 
 info "Activating venv and installing Python packages"
 # shellcheck disable=SC1091
 source venv/bin/activate
 pip install --upgrade pip
+
+# Install the packages that are not provided by apt and are needed at runtime.
+# Keep this minimal to avoid Pi Zero OOM and Python 3.13 compatibility problems.
+pip install --no-cache-dir Flask==2.3.3 requests==2.31.0
+
+# Ensure Flask imports successfully in the venv before we continue.
+python - <<'PY'
+import flask
+print(f"Flask OK: {flask.__version__}")
+PY
+
 if [[ -f requirements.txt ]]; then
-  pip install -r requirements.txt || {
-    warn "pip install -r requirements.txt failed. On Pi Zero 2 W, opencv-python-headless may be unavailable from pip."
-    warn "Try installing python3-opencv via apt: sudo apt install -y python3-opencv"
-  }
+  # Keep a safety check for future changes: ignore heavy/system-provided packages.
+  TMP_REQS=$(mktemp)
+  grep -i -v "numpy\|opencv\|pillow" requirements.txt > "$TMP_REQS" || true
+  if ! pip install --no-cache-dir -r "$TMP_REQS"; then
+    warn "pip install failed while processing the remaining requirements. The app may still work if required packages are already installed."
+  fi
+  rm -f "$TMP_REQS"
 fi
 
 # Ensure config exists
