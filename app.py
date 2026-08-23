@@ -20,6 +20,7 @@ from motion import MotionDetector
 from snapshots import Snapshots
 from database import Database
 from discord_notify import DiscordNotifier
+from audio import MicrophoneStream
 
 LOG = logging.getLogger("security_camera")
 
@@ -43,12 +44,14 @@ snapshots = Snapshots(snap_dir=SNAPSHOT_DIR, db=db, config=config)
 camera = Camera(device=config.camera_device(), width=config.camera_width(), height=config.camera_height(), fps=config.camera_fps(), jpeg_quality=config.camera_jpeg_quality())
 
 discord = DiscordNotifier(config)
+mic = MicrophoneStream(config)
 
 motion_detector = MotionDetector(camera=camera, snapshots=snapshots, db=db, notifier=discord, config=config)
 
 # Start background threads
 camera.start()
 motion_detector.start()
+mic.start()
 
 
 @app.route("/")
@@ -79,6 +82,13 @@ def mjpeg_stream() -> Iterator[bytes]:
 @app.route("/stream")
 def stream():
     return Response(mjpeg_stream(), mimetype="multipart/x-mixed-replace; boundary=frame")
+
+
+@app.route("/audio")
+def audio_stream():
+    if not mic.enabled():
+        return "Microphone audio disabled", 404
+    return Response(mic.stream_wav(), mimetype="audio/wav")
 
 
 @app.route("/snapshots")
@@ -122,41 +132,65 @@ def settings_page():
 
 @app.route("/api/save_settings", methods=["POST"])
 def api_save_settings():
-    # Accept either JSON or form data. Form keys may be like camera[width]; convert to nested dict
-    raw = request.json
-    if raw is None:
-        raw = {}
-        for k, v in request.form.items():
-            if "[" in k and k.endswith("]"):
-                base, rest = k.split("[", 1)
-                inner = rest[:-1]
-                raw.setdefault(base, {})[inner] = _coerce_value(v)
-            else:
-                raw[k] = _coerce_value(v)
     try:
+        raw = request.get_json(silent=True)
+        if raw is None:
+            raw = {}
+            for k, v in request.form.items():
+                if "[" in k and k.endswith("]"):
+                    base, rest = k.split("[", 1)
+                    inner = rest[:-1]
+                    raw.setdefault(base, {})[inner] = _coerce_value(v)
+                else:
+                    raw[k] = _coerce_value(v)
+        # Mark unchecked checkbox fields as False explicitly for any group we know about.
+        for section in ("motion", "discord", "audio"):
+            if section in raw and isinstance(raw[section], dict):
+                raw[section].setdefault("enabled", False)
+        # Preserve form-posted checkbox semantics.
+        for key in ("motion[enabled]", "discord[enabled]", "audio[enabled]"):
+            if key in request.form and request.form.get(key) in ("", None):
+                # checkbox unchecked from standard form submission does not appear in request.form
+                pass
         config.update_from_dict(raw)
+        config.validate()
         config.save()
         flash("Settings saved", "success")
-        # Apply some settings live
-        camera.update_settings(width=config.camera_width(), height=config.camera_height(), fps=config.camera_fps(), jpeg_quality=config.camera_jpeg_quality())
+        camera.update_settings(
+            width=config.camera_width(),
+            height=config.camera_height(),
+            fps=config.camera_fps(),
+            jpeg_quality=config.camera_jpeg_quality(),
+        )
         motion_detector.update_config()
         snapshots.update_config()
-        return jsonify({"ok": True})
+        if request.is_json or request.accept_mimetypes.accept_json:
+            return jsonify({"ok": True})
+        return redirect(url_for("settings_page"))
     except Exception as e:
         LOG.exception("Failed to save settings")
-        return jsonify({"ok": False, "error": str(e)}), 400
+        flash(f"Settings save failed: {e}", "error")
+        if request.is_json or request.accept_mimetypes.accept_json:
+            return jsonify({"ok": False, "error": str(e)}), 400
+        return redirect(url_for("settings_page"))
 
 
 def _coerce_value(v: str):
-    # try to coerce numeric and boolean-like strings
-    if v.lower() in ("true", "false"):
-        return v.lower() == "true"
-    try:
-        if "." in v:
-            return float(v)
-        return int(v)
-    except Exception:
+    if v is None:
+        return ""
+    if isinstance(v, bool):
         return v
+    if isinstance(v, (int, float)):
+        return v
+    s = str(v).strip()
+    if s.lower() in ("true", "false"):
+        return s.lower() == "true"
+    try:
+        if "." in s:
+            return float(s)
+        return int(s)
+    except Exception:
+        return s
 
 
 @app.route("/api/test_discord", methods=["POST"])
@@ -186,6 +220,7 @@ def shutdown():
     LOG.info("Shutting down...")
     motion_detector.stop()
     camera.stop()
+    mic.stop()
     db.close()
 
 

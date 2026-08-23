@@ -89,7 +89,7 @@ python3 -m venv --system-site-packages venv
 
 # Ensure apt-provided Python packages are available inside the venv for NumPy/OpenCV/PIL.
 info "Installing / confirming apt Python packages used by the app"
-sudo apt install -y python3-venv python3-pip python3-dev build-essential libjpeg-dev ffmpeg v4l-utils pkg-config libffi-dev python3-numpy python3-opencv python3-pil
+sudo apt install -y python3-venv python3-pip python3-dev build-essential libjpeg-dev ffmpeg v4l-utils pkg-config libffi-dev python3-numpy python3-opencv python3-pil python3-pyaudio
 
 info "Activating venv and installing Python packages"
 # shellcheck disable=SC1091
@@ -99,6 +99,15 @@ pip install --upgrade pip
 # Install the packages that are not provided by apt and are needed at runtime.
 # Keep this minimal to avoid Pi Zero OOM and Python 3.13 compatibility problems.
 pip install --no-cache-dir Flask==2.3.3 requests==2.31.0
+
+# Optional microphone support uses PyAudio from the OS packages.
+python - <<'PY'
+try:
+    import pyaudio
+    print('PyAudio OK')
+except Exception as exc:
+    print(f'PyAudio not available: {exc}')
+PY
 
 # Ensure Flask imports successfully in the venv before we continue.
 python - <<'PY'

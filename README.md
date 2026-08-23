@@ -8,6 +8,7 @@ A lightweight Python-based security camera server optimized for Raspberry Pi Zer
 Features
 - Local web UI (Flask)
 - Live MJPEG stream optimized for low CPU usage
+- Optional USB microphone audio stream available through the live page
 - Motion detection via frame differencing
 - Snapshot storage with folder-by-date layout
 - Automatic retention by count or storage size
@@ -64,6 +65,18 @@ If multiple /dev/video devices exist, set the correct device in config.json.
 
     `cp config.example.json config.json
     nano config.json`
+
+   To enable microphone audio in the live page, set:
+
+    "audio": {
+      "enabled": true,
+      "device_index": -1,
+      "sample_rate": 16000,
+      "channels": 1,
+      "chunk_size": 4096
+    }
+
+   The `device_index` can be -1 to let PyAudio choose the default mic. If you have multiple USB mics, use `python3 - <<'PY' ...` or `arecord -l` to find the correct index.
 
 6. Start for testing:
 

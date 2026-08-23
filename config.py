@@ -38,6 +38,13 @@ DEFAULTS = {
         "webhook_url": "",
         "cooldown_seconds": 30,
     },
+    "audio": {
+        "enabled": False,
+        "device_index": -1,
+        "sample_rate": 16000,
+        "channels": 1,
+        "chunk_size": 4096,
+    },
     "web": {
         "host": "0.0.0.0",
         "port": 8080
@@ -104,6 +111,13 @@ class Config:
             discord["enabled"] = bool(discord.get("enabled", False))
             discord["webhook_url"] = str(discord.get("webhook_url", ""))
             discord["cooldown_seconds"] = max(0, int(discord.get("cooldown_seconds", 30)))
+
+            audio = self._data.get("audio", {})
+            audio["enabled"] = bool(audio.get("enabled", False))
+            audio["device_index"] = int(audio.get("device_index", -1))
+            audio["sample_rate"] = max(8000, int(audio.get("sample_rate", 16000)))
+            audio["channels"] = max(1, min(2, int(audio.get("channels", 1))))
+            audio["chunk_size"] = max(256, int(audio.get("chunk_size", 4096)))
 
             web = self._data.get("web", {})
             web["host"] = str(web.get("host", "0.0.0.0"))

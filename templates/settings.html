@@ -15,6 +15,16 @@
     </nav>
   </header>
   <main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flash-messages">
+          {% for category, message in messages %}
+            <li class="flash {{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
     <form id="settings-form" method="post" action="/api/save_settings">
       <h2>Camera</h2>
       <label>Device: <input name="camera[device]" value="{{ config.camera.device }}"></label>
@@ -24,10 +34,17 @@
       <label>JPEG quality: <input name="camera[jpeg_quality]" value="{{ config.camera.jpeg_quality }}"></label>
 
       <h2>Motion</h2>
-      <label>Enabled: <input type="checkbox" name="motion[enabled]" {% if config.motion.enabled %}checked{% endif %}></label>
+      <label>Enabled: <input type="checkbox" name="motion[enabled]" value="true" {% if config.motion.enabled %}checked{% endif %}></label>
       <label>Sensitivity: <input name="motion[sensitivity]" value="{{ config.motion.sensitivity }}"></label>
       <label>Min area: <input name="motion[min_area]" value="{{ config.motion.min_area }}"></label>
       <label>Cooldown seconds: <input name="motion[cooldown_seconds]" value="{{ config.motion.cooldown_seconds }}"></label>
+
+      <h2>Audio</h2>
+      <label>Enabled: <input type="checkbox" name="audio[enabled]" value="true" {% if config.audio.enabled %}checked{% endif %}></label>
+      <label>Device index: <input name="audio[device_index]" value="{{ config.audio.device_index }}"></label>
+      <label>Sample rate: <input name="audio[sample_rate]" value="{{ config.audio.sample_rate }}"></label>
+      <label>Channels: <input name="audio[channels]" value="{{ config.audio.channels }}"></label>
+      <label>Chunk size: <input name="audio[chunk_size]" value="{{ config.audio.chunk_size }}"></label>
 
       <h2>Storage</h2>
       <label>Snapshot directory: <input name="storage[snapshot_directory]" value="{{ config.storage.snapshot_directory }}"></label>
@@ -35,7 +52,7 @@
       <label>Max storage (MB, 0=disabled): <input name="storage[max_storage_mb]" value="{{ config.storage.max_storage_mb }}"></label>
 
       <h2>Discord</h2>
-      <label>Enabled: <input type="checkbox" name="discord[enabled]" {% if config.discord.enabled %}checked{% endif %}></label>
+      <label>Enabled: <input type="checkbox" name="discord[enabled]" value="true" {% if config.discord.enabled %}checked{% endif %}></label>
       <label>Webhook URL: <input name="discord[webhook_url]" value="{{ "*hidden*" if config.discord.webhook_url else "" }}"></label>
       <label>Cooldown seconds: <input name="discord[cooldown_seconds]" value="{{ config.discord.cooldown_seconds }}"></label>
       <button type="submit">Save</button>
