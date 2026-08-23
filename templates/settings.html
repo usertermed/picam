@@ -53,7 +53,7 @@
 
       <h2>Discord</h2>
       <label>Enabled: <input type="checkbox" name="discord[enabled]" value="true" {% if config_data.get('discord', {}).get('enabled', False) %}checked{% endif %}></label>
-      <label>Webhook URL: <input name="discord[webhook_url]" value="{{ "*hidden*" if config_data.get('discord', {}).get('webhook_url', '') else "" }}"></label>
+      <label>Webhook URL: <input type="password" name="discord[webhook_url]" value="{{ config_data.get('discord', {}).get('webhook_url', '') }}" placeholder="https://discord.com/api/webhooks/..." autocomplete="off"></label>
       <label>Cooldown seconds: <input name="discord[cooldown_seconds]" value="{{ config_data.get('discord', {}).get('cooldown_seconds', 30) }}"></label>
       <button type="submit">Save</button>
     </form>

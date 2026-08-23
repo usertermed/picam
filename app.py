@@ -3,6 +3,7 @@
 """
 from __future__ import annotations
 
+import asyncio
 import io
 import logging
 import os
@@ -11,8 +12,13 @@ import time
 from datetime import datetime
 from typing import Iterator
 
+import numpy as np
 from flask import (Flask, Response, flash, jsonify, redirect, render_template,
                    request, send_file, url_for)
+
+from aiortc import RTCPeerConnection, RTCSessionDescription
+from aiortc.mediastreams import AudioStreamTrack, VideoStreamTrack
+from av import AudioFrame, VideoFrame
 
 from config import Config
 from camera import Camera
@@ -23,6 +29,43 @@ from discord_notify import DiscordNotifier
 from audio import MicrophoneStream
 
 LOG = logging.getLogger("security_camera")
+
+
+class CameraVideoStreamTrack(VideoStreamTrack):
+    def __init__(self, camera):
+        super().__init__()
+        self.camera = camera
+
+    async def recv(self):
+        pts, time_base = await self.next_timestamp()
+        frame = self.camera.latest_frame_np
+        if frame is None:
+            await asyncio.sleep(0.05)
+            return await self.recv()
+        video_frame = VideoFrame.from_ndarray(frame, format="bgr24")
+        video_frame.pts = pts
+        video_frame.time_base = time_base
+        return video_frame
+
+
+class MicrophoneAudioStreamTrack(AudioStreamTrack):
+    def __init__(self, mic):
+        super().__init__()
+        self.mic = mic
+
+    async def recv(self):
+        pts, time_base = await self.next_timestamp()
+        while True:
+            chunk = self.mic.latest_chunk()
+            if chunk:
+                arr = np.frombuffer(chunk, dtype=np.int16)
+                frame = AudioFrame.from_ndarray(arr, format="s16")
+                frame.sample_rate = int(self.mic.config.as_dict().get("audio", {}).get("sample_rate", 16000))
+                frame.pts = pts
+                frame.time_base = time_base
+                return frame
+            await asyncio.sleep(0.02)
+
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECURITY_CAMERA_SECRET") or "dev-secret"
@@ -53,6 +96,8 @@ camera.start()
 motion_detector.start()
 mic.start()
 
+pcs = set()
+
 
 @app.route("/")
 def index():
@@ -82,6 +127,28 @@ def mjpeg_stream() -> Iterator[bytes]:
 @app.route("/stream")
 def stream():
     return Response(mjpeg_stream(), mimetype="multipart/x-mixed-replace; boundary=frame")
+
+
+@app.route("/api/webrtc_offer", methods=["POST"])
+async def webrtc_offer():
+    payload = request.get_json(silent=True) or {}
+    offer = payload.get("sdp")
+    offer_type = payload.get("type")
+    if not offer or not offer_type:
+        return jsonify({"error": "missing offer"}), 400
+
+    pc = RTCPeerConnection()
+    pcs.add(pc)
+
+    if camera.latest_frame_np is not None:
+        pc.addTrack(CameraVideoStreamTrack(camera))
+    if mic.enabled():
+        pc.addTrack(MicrophoneAudioStreamTrack(mic))
+
+    await pc.setRemoteDescription(RTCSessionDescription(sdp=offer, type=offer_type))
+    answer = await pc.createAnswer()
+    await pc.setLocalDescription(answer)
+    return jsonify({"sdp": pc.localDescription.sdp, "type": pc.localDescription.type})
 
 
 @app.route("/audio")

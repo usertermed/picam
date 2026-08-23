@@ -28,14 +28,62 @@
   <section>
     <h2>Live Camera Feed</h2>
     <div class="video">
-      <img src="/stream" alt="Live stream">
+      <video id="live-video" autoplay playsinline muted></video>
+      <div id="webrtc-status" class="status-note">Connecting to live WebRTC stream…</div>
     </div>
-    {% if config_data.get('audio', {}).get('enabled', False) %}
-      <div class="audio-panel">
-        <audio controls autoplay src="/audio" type="audio/wav"></audio>
-      </div>
-    {% endif %}
   </section>
+
+  <script>
+    const video = document.getElementById('live-video');
+    const statusEl = document.getElementById('webrtc-status');
+
+    async function startWebRTC() {
+      if (!window.RTCPeerConnection) {
+        statusEl.textContent = 'Your browser does not support WebRTC. Use a modern browser on the same local network.';
+        return;
+      }
+
+      const pc = new RTCPeerConnection({ iceServers: [] });
+      pc.ontrack = (event) => {
+        if (event.streams && event.streams[0]) {
+          video.srcObject = event.streams[0];
+          statusEl.textContent = 'Live WebRTC stream connected.';
+        }
+      };
+
+      pc.onconnectionstatechange = () => {
+        if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+          statusEl.textContent = 'WebRTC connection lost. Retrying…';
+        }
+      };
+
+      try {
+        const offer = await pc.createOffer({ offerToReceiveVideo: true, offerToReceiveAudio: true });
+        await pc.setLocalDescription(offer);
+
+        const response = await fetch('/api/webrtc_offer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sdp: pc.localDescription.sdp,
+            type: pc.localDescription.type
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('WebRTC offer failed');
+        }
+
+        const answer = await response.json();
+        await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = 'Unable to connect WebRTC stream. Check the camera or browser support.';
+      }
+    }
+
+    startWebRTC();
+  </script>
 
   <section>
     <h2>Recent Motion</h2>
