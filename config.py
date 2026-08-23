@@ -12,6 +12,17 @@ from typing import Any, Dict
 
 LOG = logging.getLogger("security_camera.config")
 
+
+def _deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    merged = dict(base)
+    for key, value in override.items():
+        if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
+            merged[key] = _deep_merge(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
 DEFAULTS = {
     "camera": {
         "device": "/dev/video0",
@@ -63,10 +74,12 @@ class Config:
     def load(self) -> None:
         if os.path.exists(self.path):
             with open(self.path, "r", encoding="utf-8") as fh:
-                self._data = json.load(fh)
+                existing = json.load(fh)
+            self._data = _deep_merge(DEFAULTS, existing)
         else:
-            self._data = DEFAULTS.copy()
+            self._data = _deep_merge(DEFAULTS, {})
             self.save()
+        self.validate()
         LOG.debug("Config loaded: %s", self._data)
 
     def save(self) -> None:
@@ -78,12 +91,7 @@ class Config:
         return self._data
 
     def update_from_dict(self, d: Dict[str, Any]) -> None:
-        # Merge top-level keys
-        for k, v in d.items():
-            if k in self._data and isinstance(self._data[k], dict) and isinstance(v, dict):
-                self._data[k].update(v)
-            else:
-                self._data[k] = v
+        self._data = _deep_merge(self._data, d)
         self.validate()
 
     def validate(self) -> None:

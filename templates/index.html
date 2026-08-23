@@ -30,7 +30,7 @@
     <div class="video">
       <img src="/stream" alt="Live stream">
     </div>
-    {% if config_data['audio']['enabled'] %}
+    {% if config_data.get('audio', {}).get('enabled', False) %}
       <div class="audio-panel">
         <audio controls autoplay src="/audio" type="audio/wav"></audio>
       </div>

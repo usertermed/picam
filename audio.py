@@ -84,16 +84,15 @@ class MicrophoneStream:
                 pass
             pa.terminate()
 
-    def wav_header(self, frame_count: int = 0) -> bytes:
+    def wav_header(self, data_len: int = 0) -> bytes:
         rate = int(self.config.as_dict().get("audio", {}).get("sample_rate", 16000))
         channels = int(self.config.as_dict().get("audio", {}).get("channels", 1))
         sample_bits = 16
         byte_rate = rate * channels * sample_bits // 8
         block_align = channels * sample_bits // 8
-        data_size = frame_count * block_align
         header = bytearray(44)
         header[0:4] = b'RIFF'
-        header[4:8] = (36 + data_size).to_bytes(4, 'little')
+        header[4:8] = (36 + max(0, data_len)).to_bytes(4, 'little')
         header[8:12] = b'WAVE'
         header[12:16] = b'fmt '
         header[16:20] = (16).to_bytes(4, 'little')
@@ -104,15 +103,15 @@ class MicrophoneStream:
         header[32:34] = block_align.to_bytes(2, 'little')
         header[34:36] = sample_bits.to_bytes(2, 'little')
         header[36:40] = b'data'
-        header[40:44] = data_size.to_bytes(4, 'little')
+        header[40:44] = max(0, data_len).to_bytes(4, 'little')
         return bytes(header)
 
     def stream_wav(self):
         if not self.enabled():
             return
-        yield self.wav_header()
         while not self._stop_event.is_set():
             chunk = self.latest_chunk()
             if chunk:
-                yield chunk
+                # emit a complete WAV frame for each chunk so browsers can decode it reliably.
+                yield self.wav_header(len(chunk)) + chunk
             time.sleep(0.05)
