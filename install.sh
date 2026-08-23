@@ -40,7 +40,7 @@ sudo apt update
 # Avoid libatlas-base-dev which often has no candidate on newer releases
 # Do NOT install NumPy via pip on a Pi Zero 2 W; it can trigger OOM and restarts.
 # Use the OS package instead (python3-numpy).
-PACKAGES=(python3-venv python3-pip python3-dev build-essential libjpeg-dev ffmpeg v4l-utils pkg-config libffi-dev python3-numpy libavcodec-dev libavformat-dev libavdevice-dev libavutil-dev libswscale-dev)
+PACKAGES=(python3-venv python3-pip python3-dev build-essential libjpeg-dev ffmpeg v4l-utils pkg-config libffi-dev python3-numpy libavcodec-dev libavformat-dev libavdevice-dev libavutil-dev libswscale-dev python3-gi gir1.2-gstreamer-1.0 gir1.2-gst-plugins-base-1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa)
 AVAILABLE=()
 MISSING=()
 for pkg in "${PACKAGES[@]}"; do
@@ -98,7 +98,7 @@ pip install --upgrade pip
 
 # Install the packages that are not provided by apt and are needed at runtime.
 # Keep this minimal to avoid Pi Zero OOM and Python 3.13 compatibility problems.
-pip install --no-cache-dir Flask==2.3.3 requests==2.31.0 aiortc==1.9.0
+pip install --no-cache-dir Flask==2.3.3 requests==2.31.0
 
 # Optional microphone support uses PyAudio from the OS packages.
 python - <<'PY'

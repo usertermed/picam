@@ -1,5 +1,4 @@
 Flask==2.3.3
 requests==2.31.0
-aiortc==1.9.0
-# Install NumPy/OpenCV/PIL from apt on Raspberry Pi OS for best compatibility.
-# Example: sudo apt install -y python3-numpy python3-opencv python3-pil
+# Install NumPy/OpenCV/PIL and GStreamer + python3-gi from apt on Raspberry Pi OS for best compatibility.
+# Example: sudo apt install -y python3-numpy python3-opencv python3-pil python3-gi gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-libav gstreamer1.0-tools
