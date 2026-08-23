@@ -27,34 +27,34 @@
 
     <form id="settings-form" method="post" action="/api/save_settings">
       <h2>Camera</h2>
-      <label>Device: <input name="camera[device]" value="{{ config['camera']['device'] }}"></label>
-      <label>Width: <input name="camera[width]" value="{{ config['camera']['width'] }}"></label>
-      <label>Height: <input name="camera[height]" value="{{ config['camera']['height'] }}"></label>
-      <label>FPS: <input name="camera[fps]" value="{{ config['camera']['fps'] }}"></label>
-      <label>JPEG quality: <input name="camera[jpeg_quality]" value="{{ config['camera']['jpeg_quality'] }}"></label>
+      <label>Device: <input name="camera[device]" value="{{ config_data['camera']['device'] }}"></label>
+      <label>Width: <input name="camera[width]" value="{{ config_data['camera']['width'] }}"></label>
+      <label>Height: <input name="camera[height]" value="{{ config_data['camera']['height'] }}"></label>
+      <label>FPS: <input name="camera[fps]" value="{{ config_data['camera']['fps'] }}"></label>
+      <label>JPEG quality: <input name="camera[jpeg_quality]" value="{{ config_data['camera']['jpeg_quality'] }}"></label>
 
       <h2>Motion</h2>
-      <label>Enabled: <input type="checkbox" name="motion[enabled]" value="true" {% if config['motion']['enabled'] %}checked{% endif %}></label>
-      <label>Sensitivity: <input name="motion[sensitivity]" value="{{ config['motion']['sensitivity'] }}"></label>
-      <label>Min area: <input name="motion[min_area]" value="{{ config['motion']['min_area'] }}"></label>
-      <label>Cooldown seconds: <input name="motion[cooldown_seconds]" value="{{ config['motion']['cooldown_seconds'] }}"></label>
+      <label>Enabled: <input type="checkbox" name="motion[enabled]" value="true" {% if config_data['motion']['enabled'] %}checked{% endif %}></label>
+      <label>Sensitivity: <input name="motion[sensitivity]" value="{{ config_data['motion']['sensitivity'] }}"></label>
+      <label>Min area: <input name="motion[min_area]" value="{{ config_data['motion']['min_area'] }}"></label>
+      <label>Cooldown seconds: <input name="motion[cooldown_seconds]" value="{{ config_data['motion']['cooldown_seconds'] }}"></label>
 
       <h2>Audio</h2>
-      <label>Enabled: <input type="checkbox" name="audio[enabled]" value="true" {% if config['audio']['enabled'] %}checked{% endif %}></label>
-      <label>Device index: <input name="audio[device_index]" value="{{ config['audio']['device_index'] }}"></label>
-      <label>Sample rate: <input name="audio[sample_rate]" value="{{ config['audio']['sample_rate'] }}"></label>
-      <label>Channels: <input name="audio[channels]" value="{{ config['audio']['channels'] }}"></label>
-      <label>Chunk size: <input name="audio[chunk_size]" value="{{ config['audio']['chunk_size'] }}"></label>
+      <label>Enabled: <input type="checkbox" name="audio[enabled]" value="true" {% if config_data['audio']['enabled'] %}checked{% endif %}></label>
+      <label>Device index: <input name="audio[device_index]" value="{{ config_data['audio']['device_index'] }}"></label>
+      <label>Sample rate: <input name="audio[sample_rate]" value="{{ config_data['audio']['sample_rate'] }}"></label>
+      <label>Channels: <input name="audio[channels]" value="{{ config_data['audio']['channels'] }}"></label>
+      <label>Chunk size: <input name="audio[chunk_size]" value="{{ config_data['audio']['chunk_size'] }}"></label>
 
       <h2>Storage</h2>
-      <label>Snapshot directory: <input name="storage[snapshot_directory]" value="{{ config['storage']['snapshot_directory'] }}"></label>
-      <label>Max snapshots: <input name="storage[max_snapshots]" value="{{ config['storage']['max_snapshots'] }}"></label>
-      <label>Max storage (MB, 0=disabled): <input name="storage[max_storage_mb]" value="{{ config['storage']['max_storage_mb'] }}"></label>
+      <label>Snapshot directory: <input name="storage[snapshot_directory]" value="{{ config_data['storage']['snapshot_directory'] }}"></label>
+      <label>Max snapshots: <input name="storage[max_snapshots]" value="{{ config_data['storage']['max_snapshots'] }}"></label>
+      <label>Max storage (MB, 0=disabled): <input name="storage[max_storage_mb]" value="{{ config_data['storage']['max_storage_mb'] }}"></label>
 
       <h2>Discord</h2>
-      <label>Enabled: <input type="checkbox" name="discord[enabled]" value="true" {% if config['discord']['enabled'] %}checked{% endif %}></label>
-      <label>Webhook URL: <input name="discord[webhook_url]" value="{{ "*hidden*" if config['discord']['webhook_url'] else "" }}"></label>
-      <label>Cooldown seconds: <input name="discord[cooldown_seconds]" value="{{ config['discord']['cooldown_seconds'] }}"></label>
+      <label>Enabled: <input type="checkbox" name="discord[enabled]" value="true" {% if config_data['discord']['enabled'] %}checked{% endif %}></label>
+      <label>Webhook URL: <input name="discord[webhook_url]" value="{{ "*hidden*" if config_data['discord']['webhook_url'] else "" }}"></label>
+      <label>Cooldown seconds: <input name="discord[cooldown_seconds]" value="{{ config_data['discord']['cooldown_seconds'] }}"></label>
       <button type="submit">Save</button>
     </form>
     <form method="post" action="/api/test_discord">

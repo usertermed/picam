@@ -62,7 +62,7 @@ def index():
         "snapshot_count": snapshots.count_snapshots(),
         "recent_events": db.get_recent_events(10),
     }
-    return render_template("index.html", config=config.as_dict(), status=status)
+    return render_template("index.html", config_data=config.as_dict(), status=status)
 
 
 def mjpeg_stream() -> Iterator[bytes]:
@@ -127,7 +127,7 @@ def api_delete_all():
 
 @app.route("/settings", methods=["GET"])
 def settings_page():
-    return render_template("settings.html", config=config.as_dict())
+    return render_template("settings.html", config_data=config.as_dict())
 
 
 @app.route("/api/save_settings", methods=["POST"])
